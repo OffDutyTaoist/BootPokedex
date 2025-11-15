@@ -1,7 +1,7 @@
 // src/command_help.ts
 import type { State, CLICommand } from "./state.js";
 
-export function commandHelp(state: State): void {
+export async function commandHelp(state: State): Promise<void> {
   const commands: Record<string, CLICommand> = state.commands;
 
   console.log("Welcome to the Pokedex!");

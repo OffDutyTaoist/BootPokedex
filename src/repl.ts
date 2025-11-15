@@ -11,47 +11,67 @@ export function cleanInput(input: string): string[] {
   return trimmed.split(/\s+/);
 }
 
-export function startREPL(state: State): void {
+export function startREPL(state: State): Promise<void> {
   const { rl, commands } = state;
 
-  rl.prompt();
-
-  rl.on("line", (line) => {
-    const words = cleanInput(line);
-
-    if (words.length === 0) {
-      rl.prompt();
-      return;
-    }
-
-    const commandName = words[0];
-    const command: CLICommand | undefined = commands[commandName];
-
-    if (!command) {
-      console.log("Unknown command");
-      rl.prompt();
-      return;
-    }
-
-    try {
-      command.callback(state);
-    } catch (error) {
-      console.error("Error executing command:", error);
-    }
-
+  return new Promise((resolve) => {
     rl.prompt();
-  });
 
-  rl.on("SIGINT", () => {
-    const exitCommand = commands["exit"];
-    if (exitCommand) {
-      exitCommand.callback(state);
-    } else {
-      rl.close();
-      console.log();
-      console.log("Closing the Pokedex... Goodbye!");
-      process.exit(0);
-    }
+    rl.on("line", async (line) => {
+      const words = cleanInput(line);
+
+      if (words.length === 0) {
+        rl.prompt();
+        return;
+      }
+
+      const commandName = words[0];
+      const command: CLICommand | undefined = commands[commandName];
+
+      if (!command) {
+        console.log("Unknown command");
+        rl.prompt();
+        return;
+      }
+
+      try {
+        await command.callback(state);
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error("Error executing command:", error.message);
+        } else {
+          console.error("Error executing command:", error);
+        }
+      }
+
+      // If exit didn't kill the process, re-prompt
+      rl.prompt();
+    });
+
+    rl.on("close", () => {
+      resolve();
+    });
+
+    rl.on("SIGINT", async () => {
+      const exitCmd = commands["exit"];
+
+      if (exitCmd) {
+        try {
+          await exitCmd.callback(state);
+        } catch (error) {
+          if (error instanceof Error) {
+            console.error("Error executing exit command:", error.message);
+          } else {
+            console.error("Error executing exit command:", error);
+          }
+          process.exit(1);
+        }
+      } else {
+        rl.close();
+        console.log();
+        console.log("Closing the Pokedex... Goodbye!");
+        process.exit(0);
+      }
+    });
   });
 }
-
