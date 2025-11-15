@@ -1,20 +1,21 @@
 // src/repl.ts
 import { createInterface } from "readline";
+import { getCommands } from "./commands.js";
+import type { CLICommand } from "./command.js";
 
 export function cleanInput(input: string): string[] {
-  // 1. Trim outer whitespace
   const trimmed = input.trim().toLowerCase();
 
-  // 2. If string is now empty, return empty array
   if (trimmed === "") {
     return [];
   }
 
-  // 3. Split on one-or-more whitespace characters
   return trimmed.split(/\s+/);
 }
 
 export function startREPL(): void {
+  const commands = getCommands();
+
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -31,13 +32,27 @@ export function startREPL(): void {
       return;
     }
 
-    const command = words[0];
-    console.log(`Your command was: ${command}`);
+    const commandName = words[0];
+    const command: CLICommand | undefined = commands[commandName];
+
+    if (!command) {
+      console.log("Unknown command");
+      rl.prompt();
+      return;
+    }
+
+    try {
+      command.callback(commands);
+    } catch (error) {
+      console.error("Error executing command:", error);
+    }
+
     rl.prompt();
   });
 
-  // Optional: nicer Ctrl+C behavior (not required, but sane)
   rl.on("SIGINT", () => {
-    rl.close();
+    console.log();
+    console.log("Closing the Pokedex... Goodbye!");
+    process.exit(0);
   });
 }
