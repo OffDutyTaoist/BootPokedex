@@ -1,7 +1,5 @@
 // src/repl.ts
-import { createInterface } from "readline";
-import { getCommands } from "./commands.js";
-import type { CLICommand } from "./command.js";
+import type { State, CLICommand } from "./state.js";
 
 export function cleanInput(input: string): string[] {
   const trimmed = input.trim().toLowerCase();
@@ -13,14 +11,8 @@ export function cleanInput(input: string): string[] {
   return trimmed.split(/\s+/);
 }
 
-export function startREPL(): void {
-  const commands = getCommands();
-
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    prompt: "Pokedex > ",
-  });
+export function startREPL(state: State): void {
+  const { rl, commands } = state;
 
   rl.prompt();
 
@@ -42,7 +34,7 @@ export function startREPL(): void {
     }
 
     try {
-      command.callback(commands);
+      command.callback(state);
     } catch (error) {
       console.error("Error executing command:", error);
     }
@@ -51,8 +43,15 @@ export function startREPL(): void {
   });
 
   rl.on("SIGINT", () => {
-    console.log();
-    console.log("Closing the Pokedex... Goodbye!");
-    process.exit(0);
+    const exitCommand = commands["exit"];
+    if (exitCommand) {
+      exitCommand.callback(state);
+    } else {
+      rl.close();
+      console.log();
+      console.log("Closing the Pokedex... Goodbye!");
+      process.exit(0);
+    }
   });
 }
+
