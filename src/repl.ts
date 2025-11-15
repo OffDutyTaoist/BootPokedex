@@ -1,4 +1,5 @@
 // src/repl.ts
+import { createInterface } from "readline";
 
 export function cleanInput(input: string): string[] {
   // 1. Trim outer whitespace
@@ -11,4 +12,32 @@ export function cleanInput(input: string): string[] {
 
   // 3. Split on one-or-more whitespace characters
   return trimmed.split(/\s+/);
+}
+
+export function startREPL(): void {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: "Pokedex > ",
+  });
+
+  rl.prompt();
+
+  rl.on("line", (line) => {
+    const words = cleanInput(line);
+
+    if (words.length === 0) {
+      rl.prompt();
+      return;
+    }
+
+    const command = words[0];
+    console.log(`Your command was: ${command}`);
+    rl.prompt();
+  });
+
+  // Optional: nicer Ctrl+C behavior (not required, but sane)
+  rl.on("SIGINT", () => {
+    rl.close();
+  });
 }
