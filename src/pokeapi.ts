@@ -1,5 +1,7 @@
 // src/pokeapi.ts
 
+import { Cache } from "./pokecache.js"
+
 export type ShallowLocation = {
   name: string;
   url: string;
@@ -20,12 +22,22 @@ export type Location = {
 
 export class PokeAPI {
   private static readonly baseURL = "https://pokeapi.co/api/v2";
+  #cache: Cache;
 
-  constructor() {}
+  constructor(cacheIntervalMs = 30_000) {
+    this.#cache = new Cache(cacheIntervalMs);
+  }
 
   async fetchLocations(pageURL?: string): Promise<ShallowLocations> {
     const url =
       pageURL ?? `${PokeAPI.baseURL}/location-area?limit=20`;
+
+    const cached = this.#cache.get<ShallowLocations>(url);
+    if (cached) {
+      // Optional debug:
+      // console.log(`[cache] hit for ${url}`);
+      return cached;
+    }
 
     const res = await fetch(url);
 
@@ -35,11 +47,20 @@ export class PokeAPI {
       );
     }
 
-    return res.json() as Promise<ShallowLocations>;
+    const data = (await res.json()) as ShallowLocations;
+    this.#cache.add(url, data);
+    return data;
   }
 
   async fetchLocation(locationName: string): Promise<Location> {
     const url = `${PokeAPI.baseURL}/location-area/${locationName}`;
+
+    const cached = this.#cache.get<Location>(url);
+    if (cached) {
+      // console.log(`[cache] hit for ${url}`);
+      return cached;
+    }
+
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -48,6 +69,8 @@ export class PokeAPI {
       );
     }
 
-    return res.json() as Promise<Location>;
+    const data = (await res.json()) as Location;
+    this.#cache.add(url, data);
+    return data;
   }
 }
