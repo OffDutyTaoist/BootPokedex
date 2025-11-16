@@ -7,6 +7,7 @@ import { commandMap } from "./command_map.js";
 import { commandMapBack } from "./command_map_back.js";
 import { commandExplore } from "./command_explore.js"
 import { commandCatch } from "./command_catch.js"
+import { commandInspect } from "./command_inspect.js";
 
 export type State = {
   rl: Interface;
@@ -54,6 +55,11 @@ function buildCommands(): Record<string, CLICommand> {
       name: "catch",
       description: "Attempt to catch a Pokemon by name",
       callback: commandCatch,
+    },
+    inspect: {
+      name: "inspect",
+      description: "Inspect a caught Pokemon",
+      callback: commandInspect,
     },
   };
 }

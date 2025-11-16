@@ -35,7 +35,28 @@ export type Pokemon = {
   id: number;
   name: string;
   base_experience: number;
+  height: number;
+  weight: number;
+  stats: PokemonStat[];
+  types: PokemonTypeSlot[];
   // Listen babe, tons of other fields exist, but we only need you. Promise.
+};
+
+export type PokemonStat = {
+  base_stat: number;
+  effort: number;
+  stat: {
+    name: string;
+    url: string;
+  };
+};
+
+export type PokemonTypeSlot = {
+  slot: number;
+  type: {
+    name: string;
+    url: string;
+  };
 };
 
 export class PokeAPI {
