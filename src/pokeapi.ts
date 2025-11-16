@@ -31,6 +31,13 @@ export type Location = {
   // space to add moar fields! MOAR!!!
 };
 
+export type Pokemon = {
+  id: number;
+  name: string;
+  base_experience: number;
+  // Listen babe, tons of other fields exist, but we only need you. Promise.
+};
+
 export class PokeAPI {
   private static readonly baseURL = "https://pokeapi.co/api/v2";
   #cache: Cache;
@@ -81,6 +88,28 @@ export class PokeAPI {
     }
 
     const data = (await res.json()) as Location;
+    this.#cache.add(url, data);
+    return data;
+  }
+
+  async fetchPokemon(name: string): Promise<Pokemon> {
+    const lcName = name.toLowerCase();
+    const url = `${PokeAPI.baseURL}/pokemon/${lcName}`;
+
+    const cached = this.#cache.get<Pokemon>(url);
+    if (cached) {
+      return cached;
+    }
+
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      throw new Error(
+        `Failed to fetch pokemon ${lcName}: ${res.status} ${res.statusText}`,
+      );
+    }
+
+    const data = (await res.json()) as Pokemon;
     this.#cache.add(url, data);
     return data;
   }
