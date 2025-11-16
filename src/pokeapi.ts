@@ -14,9 +14,20 @@ export type ShallowLocations = {
   results: ShallowLocation[];
 };
 
+export type PokemonRef = {
+  name: string;
+  url: string;
+};
+
+export type PokemonEncounter = {
+  pokemon: PokemonRef;
+  // other fields exist, we don't care about them here. We do, but we don't. It's complicated.
+};
+
 export type Location = {
   id: number;
   name: string;
+  pokemon_encounters: PokemonEncounter[];
   // space to add moar fields! MOAR!!!
 };
 

@@ -26,6 +26,7 @@ export function startREPL(state: State): Promise<void> {
       }
 
       const commandName = words[0];
+      const args = words.slice(1);
       const command: CLICommand | undefined = commands[commandName];
 
       if (!command) {
@@ -35,7 +36,7 @@ export function startREPL(state: State): Promise<void> {
       }
 
       try {
-        await command.callback(state);
+        await command.callback(state, ...args);
       } catch (error) {
         if (error instanceof Error) {
           console.error("Error executing command:", error.message);
